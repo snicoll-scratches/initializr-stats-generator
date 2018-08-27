@@ -19,6 +19,13 @@ public class GeneratorController {
 		this.generator = generator;
 	}
 
+	@GetMapping("/statistics/{from}/{to}")
+	public GenerationStatistics statistics(@PathVariable LocalDate from,
+			@PathVariable LocalDate to) {
+		DateRange range = new DateRange(from, to);
+		return this.generator.generateStatistics(range);
+	}
+
 	@GetMapping("/events/{from}/{to}")
 	public EventsDescriptor events(@PathVariable LocalDate from,
 			@PathVariable LocalDate to) {
@@ -26,11 +33,11 @@ public class GeneratorController {
 		return new EventsDescriptor(this.generator.getEvents(range));
 	}
 
-	@GetMapping("/statistics/{from}/{to}")
-	public GenerationStatistics statistics(@PathVariable LocalDate from,
+	@GetMapping("/top-ips/{from}/{to}")
+	public TopIpsDescriptor topIps(@PathVariable LocalDate from,
 			@PathVariable LocalDate to) {
 		DateRange range = new DateRange(from, to);
-		return this.generator.generateStatistics(range);
+		return new TopIpsDescriptor(this.generator.getTopIps(range));
 	}
 
 }
