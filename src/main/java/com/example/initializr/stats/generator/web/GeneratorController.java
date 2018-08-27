@@ -1,10 +1,13 @@
 package com.example.initializr.stats.generator.web;
 
+import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Random;
 
 import com.example.initializr.stats.generator.DateRange;
 import com.example.initializr.stats.generator.GenerationStatistics;
 import com.example.initializr.stats.generator.Generator;
+import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +41,18 @@ public class GeneratorController {
 			@PathVariable LocalDate to) {
 		DateRange range = new DateRange(from, to);
 		return new TopIpsDescriptor(this.generator.getTopIps(range));
+	}
+
+	@GetMapping("/reverse-lookup/costly/{ip}")
+	public ReverseLookupDescriptor costlyReverseLookup(@PathVariable String ip) {
+		return new ReverseLookupDescriptor(ip, ip + ".example.com");
+	}
+
+	@GetMapping("/reverse-lookup/free/{ip}")
+	public Mono<ReverseLookupDescriptor> freeReverseLookup(@PathVariable String ip) {
+		return Mono.just(costlyReverseLookup(ip))
+				.delayElement(new Random().nextLong() < 0.3 ? Duration.ofSeconds(3)
+						: Duration.ofSeconds(0));
 	}
 
 }
