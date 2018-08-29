@@ -6,7 +6,7 @@ initializr:
       datasets:
         - range:
             from: 2018-01-01
-            to: 2018-03-01
+            to: 2018-03-31
           data:
             monday: 15000
             tuesday: 17000
@@ -17,7 +17,7 @@ initializr:
             sunday: 7000
         - range:
             from: 2018-04-01
-            to: 2018-07-01
+            to: 2018-06-30
           data:
             monday: 35000
             tuesday: 37000
@@ -27,8 +27,8 @@ initializr:
             saturday: 17000
             sunday: 15000
         - range:
-            from: 2018-08-01
-            to: 2018-10-01
+            from: 2018-07-01
+            to: 2018-09-30
           data:
             monday: 37000
             tuesday: 39000
