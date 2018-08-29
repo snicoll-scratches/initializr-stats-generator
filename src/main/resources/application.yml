@@ -5,6 +5,17 @@ initializr:
     generator:
       datasets:
         - range:
+            from: 2014-01-01
+            to: 2017-12-31
+          data:
+            monday: 2000
+            tuesday: 3000
+            wednesday: 3000
+            thursday: 4000
+            friday: 1500
+            saturday: 700
+            sunday: 300
+        - range:
             from: 2018-01-01
             to: 2018-03-31
           data:
