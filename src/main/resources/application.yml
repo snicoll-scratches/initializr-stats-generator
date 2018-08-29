@@ -10,7 +10,7 @@ initializr:
           data:
             monday: 15000
             tuesday: 17000
-            wedensday: 17000
+            wednesday: 17000
             thursday: 22000
             friday: 15000
             saturday: 9000
@@ -21,7 +21,7 @@ initializr:
           data:
             monday: 35000
             tuesday: 37000
-            wedensday: 37000
+            wednesday: 37000
             thursday: 42000
             friday: 35000
             saturday: 17000
@@ -32,7 +32,7 @@ initializr:
           data:
             monday: 37000
             tuesday: 39000
-            wedensday: 39000
+            wednesday: 39000
             thursday: 42000
             friday: 37000
             saturday: 18000
