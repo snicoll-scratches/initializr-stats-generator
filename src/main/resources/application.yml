@@ -93,6 +93,9 @@ initializr:
           date: 2018-08-21
           type: release
 
+server:
+  port: 8081
+
 spring:
   mvc:
     date-format: yyyy-MM-dd
