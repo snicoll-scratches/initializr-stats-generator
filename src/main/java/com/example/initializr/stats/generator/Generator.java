@@ -33,7 +33,6 @@ public class Generator {
 		this.latency = new Latency();
 	}
 
-
 	public GenerationStatistics generateStatistics(DateRange range) {
 		return new RandomGenerator(range).generate();
 	}
@@ -146,7 +145,7 @@ public class Generator {
 				entries.add(currentRelease.getData().getCurrent(), randomValue(currentDay, total, currentRatio));
 				if (currentRelease.getData().getMaintenance() != null) {
 					double maintenanceRatio = (next != null ? 0.08 : 0.1);
-					entries.add(currentRelease.getData().getMaintenance(),randomValue(currentDay, total, maintenanceRatio));
+					entries.add(currentRelease.getData().getMaintenance(), randomValue(currentDay, total, maintenanceRatio));
 				}
 				if (currentRelease.getData().getNext() != null) {
 					double nextRatio = (next != null ? 0.02 : 0);
