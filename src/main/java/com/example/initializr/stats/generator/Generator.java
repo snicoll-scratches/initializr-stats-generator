@@ -1,5 +1,6 @@
 package com.example.initializr.stats.generator;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -22,11 +23,14 @@ public class Generator {
 
 	private final List<Event> events;
 
+	private Latency latency;
+
 	public Generator(List<DataSet> dataSets,
 			List<Release> releases, List<Event> events) {
 		this.dataSets = new ArrayList<>(dataSets);
 		this.releases = new ArrayList<>(releases);
 		this.events = new ArrayList<>(events);
+		this.latency = new Latency();
 	}
 
 
@@ -55,6 +59,17 @@ public class Generator {
 	public List<String> getTopIps(DateRange dateRange) {
 		return IntStream.range(0, 10).mapToObj((i) -> randomIp())
 				.collect(Collectors.toList());
+	}
+
+	public Latency getLatency() {
+		return this.latency;
+	}
+
+	public void updateLatency(Float ratio, Integer latencyMin, Integer latencyMax) {
+		float newRatio = (ratio != null ? ratio : this.latency.ratio);
+		int newMin = (latencyMin != null ? latencyMin : this.latency.latencyMin);
+		int newMax = (latencyMax != null ? latencyMax : this.latency.latencyMax);
+		this.latency = new Latency(newRatio, newMin, newMax);
 	}
 
 	private String randomIp() {
@@ -160,6 +175,48 @@ public class Generator {
 			}
 			return value;
 		}
+	}
+
+	public static final class Latency {
+
+		private final float ratio;
+
+		private final int latencyMin;
+
+		private final int latencyMax;
+
+		Latency(float ratio, int latencyMin, int latencyMax) {
+			this.ratio = ratio;
+			this.latencyMin = latencyMin;
+			this.latencyMax = latencyMax;
+		}
+
+		Latency() {
+			this(0.0f, 4000, 6000);
+		}
+
+		public Duration randomLatency() {
+			boolean apply = random.nextFloat() < ratio;
+			return apply ? generateRandomLatency() : Duration.ZERO;
+		}
+
+		public float getRatio() {
+			return this.ratio;
+		}
+
+		public int getLatencyMin() {
+			return this.latencyMin;
+		}
+
+		public int getLatencyMax() {
+			return this.latencyMax;
+		}
+
+		private Duration generateRandomLatency() {
+			int ms = random.nextInt(latencyMax - latencyMin) + latencyMin;
+			return Duration.ofMillis(ms);
+		}
+
 	}
 
 }

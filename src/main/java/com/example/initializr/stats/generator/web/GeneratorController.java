@@ -51,8 +51,7 @@ public class GeneratorController {
 	@GetMapping("/reverse-lookup/free/{ip}")
 	public Mono<ReverseLookupDescriptor> freeReverseLookup(@PathVariable String ip) {
 		return Mono.just(costlyReverseLookup(ip))
-				.delayElement(new Random().nextLong() < 0.3 ? Duration.ofSeconds(3)
-						: Duration.ofSeconds(0));
+				.delayElement(this.generator.getLatency().randomLatency());
 	}
 
 }

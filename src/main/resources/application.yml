@@ -1,5 +1,3 @@
-
-
 initializr:
   stats:
     generator:
@@ -103,6 +101,12 @@ initializr:
         - name: "Spring Boot 2.1.0.M2"
           date: 2018-08-21
           type: release
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
 
 server:
   port: 8081
