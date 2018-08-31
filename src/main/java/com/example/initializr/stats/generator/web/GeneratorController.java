@@ -1,12 +1,13 @@
 package com.example.initializr.stats.generator.web;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Random;
+import java.util.List;
 
 import com.example.initializr.stats.generator.DateRange;
+import com.example.initializr.stats.generator.Event;
 import com.example.initializr.stats.generator.GenerationStatistics;
 import com.example.initializr.stats.generator.Generator;
+import com.example.initializr.stats.generator.GeneratorClient;
 import reactor.core.publisher.Mono;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,17 +31,17 @@ public class GeneratorController {
 	}
 
 	@GetMapping("/events/{from}/{to}")
-	public EventsDescriptor events(@PathVariable LocalDate from,
+	public List<Event> events(@PathVariable LocalDate from,
 			@PathVariable LocalDate to) {
 		DateRange range = new DateRange(from, to);
-		return new EventsDescriptor(this.generator.getEvents(range));
+		return this.generator.getEvents(range);
 	}
 
 	@GetMapping("/top-ips/{from}/{to}")
-	public TopIpsDescriptor topIps(@PathVariable LocalDate from,
+	public List<GeneratorClient> topIps(@PathVariable LocalDate from,
 			@PathVariable LocalDate to) {
 		DateRange range = new DateRange(from, to);
-		return new TopIpsDescriptor(this.generator.getTopIps(range));
+		return this.generator.getTopIps(range);
 	}
 
 	@GetMapping("/reverse-lookup/costly/{ip}")
