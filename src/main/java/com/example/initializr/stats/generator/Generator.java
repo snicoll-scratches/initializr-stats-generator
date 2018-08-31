@@ -55,8 +55,8 @@ public class Generator {
 				.collect(Collectors.toList());
 	}
 
-	public List<String> getTopIps(DateRange dateRange) {
-		return IntStream.range(0, 10).mapToObj((i) -> randomIp())
+	public List<GeneratorClient> getTopIps(DateRange dateRange) {
+		return IntStream.range(0, 10).mapToObj((i) -> new GeneratorClient(randomIp()))
 				.collect(Collectors.toList());
 	}
 
