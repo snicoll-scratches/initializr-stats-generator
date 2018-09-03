@@ -8,10 +8,14 @@ import com.example.initializr.stats.generator.Event;
 import com.example.initializr.stats.generator.GenerationStatistics;
 import com.example.initializr.stats.generator.Generator;
 import com.example.initializr.stats.generator.GeneratorClient;
+import io.github.bucket4j.Bucket;
 import reactor.core.publisher.Mono;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -50,9 +54,19 @@ public class GeneratorController {
 	}
 
 	@GetMapping("/reverse-lookup/free/{ip}")
-	public Mono<ReverseLookupDescriptor> freeReverseLookup(@PathVariable String ip) {
-		return Mono.just(costlyReverseLookup(ip))
-				.delayElement(this.generator.getLatency().randomLatency());
+	public ResponseEntity<Mono<ReverseLookupDescriptor>> freeReverseLookup(
+			@RequestAttribute("RateLimiterBucket") Bucket bucket,
+			@PathVariable String ip) {
+
+		if (bucket.tryConsume(1)) {
+			return ResponseEntity.ok()
+					.header("X-RateLimit-Remaining", String.valueOf(bucket.getAvailableTokens()))
+					.body(Mono.just(costlyReverseLookup(ip))
+							.delayElement(this.generator.getLatency().randomLatency()));
+		}
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.header("X-RateLimit-Remaining", "0")
+				.build();
 	}
 
 }
