@@ -1,37 +1,34 @@
 package com.example.initializr.stats.generator.web;
 
-import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
-import io.github.bucket4j.Bucket4j;
 
-import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
-public class RateLimiterHandlerInterceptor extends HandlerInterceptorAdapter {
+class RateLimiterHandlerInterceptor extends HandlerInterceptorAdapter {
 
-	public static String SESSION_BUCKET_ATTRIBUTE = "RateLimiterBucket";
+	private static final String SESSION_BUCKET_ATTRIBUTE = "RateLimiterBucket";
 
-	private static final ConcurrentMapCache buckets = new ConcurrentMapCache("buckets");
+	private final ConcurrentHashMap<String, Bucket> buckets = new ConcurrentHashMap<>();
+
+	private final Function<String, Bucket> bucketFactory;
+
+	RateLimiterHandlerInterceptor(Function<String, Bucket> bucketFactory) {
+		this.bucketFactory = bucketFactory;
+	}
 
 	@Override
-	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
+			Object handler) {
 		String remoteAddr = request.getRemoteAddr();
-		Bucket bucket = buckets.get(remoteAddr, Bucket.class);
-		if (bucket == null) {
-			buckets.put(remoteAddr, createBucket());
-		}
+		Bucket bucket = buckets.computeIfAbsent(remoteAddr, this.bucketFactory);
 		request.setAttribute(SESSION_BUCKET_ATTRIBUTE, bucket);
 		return true;
 	}
 
-	private Bucket createBucket() {
-		Bandwidth limit = Bandwidth.simple(10, Duration.ofMinutes(1));
-		return Bucket4j.builder().addLimit(limit).build();
-	}
 }
