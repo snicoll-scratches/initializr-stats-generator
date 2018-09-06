@@ -1,17 +1,21 @@
 package com.example.initializr.stats.generator.web;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 
 import com.example.initializr.stats.generator.DateRange;
 import com.example.initializr.stats.generator.Event;
 import com.example.initializr.stats.generator.GenerationStatistics;
+import com.example.initializr.stats.generator.GenerationStatisticsItem;
 import com.example.initializr.stats.generator.Generator;
 import com.example.initializr.stats.generator.GeneratorClient;
 import io.github.bucket4j.Bucket;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,8 +27,11 @@ public class GeneratorController {
 
 	private final Generator generator;
 
+	private final Flux<GenerationStatisticsItem> liveStatistics;
+
 	public GeneratorController(Generator generator) {
 		this.generator = generator;
+		this.liveStatistics = generator.generateLiveStatistics(Duration.ofSeconds(10));
 	}
 
 	@GetMapping("/statistics/{from}/{to}")
@@ -32,6 +39,11 @@ public class GeneratorController {
 			@PathVariable LocalDate to) {
 		DateRange range = new DateRange(from, to);
 		return this.generator.generateStatistics(range);
+	}
+
+	@GetMapping(path = "/live-statistics", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
+	public Flux<GenerationStatisticsItem> liveStatistics() {
+		return this.liveStatistics;
 	}
 
 	@GetMapping("/events/{from}/{to}")

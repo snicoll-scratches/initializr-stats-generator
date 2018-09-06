@@ -2,6 +2,9 @@ package com.example.initializr.stats.generator;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -9,6 +12,8 @@ import java.util.Random;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import reactor.core.publisher.Flux;
 
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -35,6 +40,23 @@ public class Generator {
 
 	public GenerationStatistics generateStatistics(DateRange range) {
 		return new RandomGenerator(range).generate();
+	}
+
+	public Flux<GenerationStatisticsItem> generateLiveStatistics(Duration periodicity) {
+		return Flux.interval(Duration.ZERO, periodicity)
+				.map(i -> generateCurrentTimestamp(periodicity)).map(timestamp -> {
+					LocalDate date = timestamp.toLocalDate();
+					RandomGenerator generator = new RandomGenerator(
+							new DateRange(date, date));
+					return generator.generateItem(timestamp, periodicity);
+				}).share();
+	}
+
+	private LocalDateTime generateCurrentTimestamp(Duration periodicity) {
+		LocalDateTime now = LocalDateTime.now();
+		int periodicitySeconds = (int) periodicity.getSeconds();
+		return now.withSecond((now.getSecond() / periodicitySeconds) * periodicitySeconds)
+				.withNano(0);
 	}
 
 	public List<DataSet> getDataSets(DateRange dateRange) {
@@ -97,7 +119,6 @@ public class Generator {
 		return (event) -> range.match(event.getDate());
 	}
 
-
 	private class RandomGenerator {
 
 		private final DateRange range;
@@ -107,7 +128,6 @@ public class Generator {
 		private final List<DataSet> dataSets;
 
 		private final MultiValueMap<LocalDate, Event> events;
-
 
 		RandomGenerator(DateRange range) {
 			this.range = range;
@@ -142,22 +162,47 @@ public class Generator {
 				int total = currentDataSet.getData().get(currentDay.getDayOfWeek());
 				String next = currentRelease.getData().getNext();
 				double currentRatio = (next != null ? 0.9 : 0.92);
-				entries.add(currentRelease.getData().getCurrent(), randomValue(currentDay, total, currentRatio));
+				entries.add(currentRelease.getData().getCurrent(), randomValueForDay(currentDay, total, currentRatio));
 				if (currentRelease.getData().getMaintenance() != null) {
 					double maintenanceRatio = (next != null ? 0.08 : 0.1);
-					entries.add(currentRelease.getData().getMaintenance(), randomValue(currentDay, total, maintenanceRatio));
+					entries.add(currentRelease.getData().getMaintenance(), randomValueForDay(currentDay, total, maintenanceRatio));
 				}
 				if (currentRelease.getData().getNext() != null) {
 					double nextRatio = (next != null ? 0.02 : 0);
-					entries.add(next, randomValue(currentDay, total, nextRatio));
+					entries.add(next, randomValueForDay(currentDay, total, nextRatio));
 				}
 				currentDay = currentDay.plusDays(1);
 			}
 			return new GenerationStatistics(range, entries);
 		}
 
+		GenerationStatisticsItem generateItem(LocalDateTime timestamp, Duration periodicity) {
+			if (timestamp.isBefore(this.range.getFrom().atStartOfDay())
+					|| timestamp.isAfter(this.range.getTo().atTime(LocalTime.MAX))) {
+				throw new IllegalArgumentException(String.format(
+						"Timestamp %s not within range %s", timestamp, this.range));
+			}
+			int dayTotal = dataSets.get(0).getData().get(timestamp.getDayOfWeek());
+			double ratio = (double) periodicity.toMillis() / Duration.ofDays(1).toMillis();
+			int total = (int) Math.ceil(dayTotal * ratio);
+			DateTimeRange range = new DateTimeRange(timestamp,
+					timestamp.plus(periodicity.getSeconds(), ChronoUnit.SECONDS));
+			return new GenerationStatisticsItem(range, randomValueForPeriodicity(timestamp, total));
+		}
+
+		private int randomValueForPeriodicity(LocalDateTime timestamp, long total) {
+			double ratio = (random.nextFloat() < 0.2 ?  0.5 : 1);
+			double value = ratio * total;
+			int hour = timestamp.getHour();
+			if (hour > 8 && hour < 18) {
+				double workingHoursRatio = (random.nextFloat() < 0.4  ? 2 : 1);
+				value = value * workingHoursRatio;
+			}
+			return (int) Math.ceil(value);
+		}
+
 		// very scientific measure
-		private GenerationStatistics.Entry randomValue(LocalDate day, int total, double ratio) {
+		private GenerationStatistics.Entry randomValueForDay(LocalDate day, int total, double ratio) {
 			double value = ratio * total;
 			value = value - (value * 0.05);
 			value = value + (value * random.nextFloat() / 10);
@@ -174,6 +219,7 @@ public class Generator {
 			}
 			return value;
 		}
+
 	}
 
 	public static final class Latency {
