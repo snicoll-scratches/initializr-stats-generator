@@ -31,7 +31,7 @@ public class GeneratorController {
 
 	public GeneratorController(Generator generator) {
 		this.generator = generator;
-		this.liveStatistics = generator.generateLiveStatistics(Duration.ofSeconds(10));
+		this.liveStatistics = generator.generateLiveStatistics(Duration.ofSeconds(5));
 	}
 
 	@GetMapping("/statistics/{from}/{to}")
