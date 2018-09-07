@@ -190,15 +190,14 @@ public class Generator {
 			return new GenerationStatisticsItem(range, randomValueForPeriodicity(timestamp, total));
 		}
 
-		private int randomValueForPeriodicity(LocalDateTime timestamp, long total) {
-			double ratio = (random.nextFloat() < 0.2 ?  0.5 : 1);
-			double value = ratio * total;
+		private int randomValueForPeriodicity(LocalDateTime timestamp, int total) {
+			int ratio = 1;
 			int hour = timestamp.getHour();
 			if (hour > 8 && hour < 18) {
 				double workingHoursRatio = (random.nextFloat() < 0.4  ? 2 : 1);
-				value = value * workingHoursRatio;
+				ratio *= workingHoursRatio;
 			}
-			return (int) Math.ceil(value);
+			return random.nextInt(total * ratio);
 		}
 
 		// very scientific measure
